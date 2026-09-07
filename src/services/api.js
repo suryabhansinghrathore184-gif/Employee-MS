@@ -118,7 +118,7 @@ function handleFallback(endpoint, options = {}) {
   if (endpoint.includes('/auth/login.php') || endpoint.includes('/auth/register.php')) {
     const bodyObj = options.body ? JSON.parse(options.body) : {};
     const matchedUser = fallbackData.getLoginUser(bodyObj.username || 'admin');
-    return { status: 'success', user: matchedUser, token: 'demo_token_123' };
+    return { status: 'success', user: matchedUser, token: 'demo_token_123', message: 'Login successful' };
   }
   if (endpoint.includes('/stats/index.php')) {
     return { status: 'success', data: fallbackData.stats };
@@ -128,13 +128,25 @@ function handleFallback(endpoint, options = {}) {
       const bodyObj = options.body ? JSON.parse(options.body) : {};
       const newDept = { id: Date.now(), ...bodyObj, total_employees: 0, active_employees: 0 };
       fallbackData.departments.push(newDept);
-      return { status: 'success', message: 'Department created', data: newDept };
+      return { status: 'success', message: `Department '${newDept.name}' created successfully!`, data: newDept };
     }
     return { status: 'success', count: fallbackData.departments.length, data: fallbackData.departments };
   }
   if (endpoint.includes('/employees/detail.php')) {
     const urlParams = new URLSearchParams(endpoint.split('?')[1] || '');
     const empId = urlParams.get('id');
+    if (method === 'PUT') {
+      const bodyObj = options.body ? JSON.parse(options.body) : {};
+      const idx = fallbackData.employees.findIndex(e => String(e.id) === String(empId));
+      if (idx !== -1) {
+        fallbackData.employees[idx] = { ...fallbackData.employees[idx], ...bodyObj };
+      }
+      return { status: 'success', message: 'Employee profile updated successfully!' };
+    }
+    if (method === 'DELETE') {
+      fallbackData.employees = fallbackData.employees.filter(e => String(e.id) !== String(empId));
+      return { status: 'success', message: 'Employee deleted successfully!' };
+    }
     const emp = fallbackData.employees.find(e => String(e.id) === String(empId)) || fallbackData.employees[0];
     return { status: 'success', data: emp };
   }
@@ -143,29 +155,144 @@ function handleFallback(endpoint, options = {}) {
       const bodyObj = options.body ? JSON.parse(options.body) : {};
       const newEmp = { id: Date.now(), employee_code: `EMP${100 + fallbackData.employees.length + 1}`, status: 'Active', ...bodyObj };
       fallbackData.employees.unshift(newEmp);
-      return { status: 'success', message: 'Employee added successfully', data: newEmp };
+      return { status: 'success', message: `Employee '${newEmp.first_name} ${newEmp.last_name || ''}' added successfully!`, data: newEmp };
     }
     return { status: 'success', count: fallbackData.employees.length, data: fallbackData.employees };
   }
   if (endpoint.includes('/attendance/index.php')) {
+    if (method === 'POST') {
+      const bodyObj = options.body ? JSON.parse(options.body) : {};
+      const targetEmp = fallbackData.employees.find(e => String(e.id) === String(bodyObj.employee_id)) || fallbackData.employees[0];
+      const empName = targetEmp ? `${targetEmp.first_name} ${targetEmp.last_name}` : 'Employee';
+
+      if (bodyObj.action === 'check_in') {
+        const newRecord = {
+          id: Date.now(),
+          employee_id: bodyObj.employee_id || 1,
+          first_name: targetEmp?.first_name || 'Rahul',
+          last_name: targetEmp?.last_name || 'Sharma',
+          date: new Date().toISOString().split('T')[0],
+          check_in: new Date().toLocaleTimeString('en-US', { hour12: false }),
+          check_out: null,
+          work_hours: 0,
+          status: 'Present',
+          notes: 'Punch check-in'
+        };
+        fallbackData.attendance.unshift(newRecord);
+        return { status: 'success', message: 'Clocked in successfully!', data: newRecord };
+      }
+
+      if (bodyObj.action === 'check_out') {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const record = fallbackData.attendance.find(r => String(r.employee_id) === String(bodyObj.employee_id) && r.date === todayStr);
+        if (record) {
+          record.check_out = new Date().toLocaleTimeString('en-US', { hour12: false });
+          record.work_hours = 8.5;
+        }
+        return { status: 'success', message: 'Clocked out successfully!' };
+      }
+
+      // mark_absent or status override
+      const statusLabel = bodyObj.status || 'Absent';
+      const markRecord = {
+        id: Date.now(),
+        employee_id: bodyObj.employee_id,
+        first_name: targetEmp?.first_name || 'Employee',
+        last_name: targetEmp?.last_name || '',
+        date: bodyObj.date || new Date().toISOString().split('T')[0],
+        check_in: null,
+        check_out: null,
+        work_hours: 0,
+        status: statusLabel,
+        notes: bodyObj.notes || ''
+      };
+      fallbackData.attendance.unshift(markRecord);
+      return { status: 'success', message: `Recorded '${empName}' as ${statusLabel}!`, data: markRecord };
+    }
     return { status: 'success', count: fallbackData.attendance.length, data: fallbackData.attendance };
   }
   if (endpoint.includes('/leaves/index.php')) {
     if (method === 'POST') {
       const bodyObj = options.body ? JSON.parse(options.body) : {};
-      const newLeave = { id: Date.now(), status: 'Pending', applied_on: new Date().toISOString().split('T')[0], ...bodyObj };
+      const targetEmp = fallbackData.employees.find(e => String(e.id) === String(bodyObj.employee_id)) || fallbackData.employees[0];
+      const newLeave = {
+        id: Date.now(),
+        employee_id: bodyObj.employee_id || 1,
+        first_name: targetEmp?.first_name || 'Rahul',
+        last_name: targetEmp?.last_name || 'Sharma',
+        leave_type: bodyObj.leave_type || 'Casual',
+        start_date: bodyObj.start_date,
+        end_date: bodyObj.end_date,
+        days: bodyObj.days || 1,
+        reason: bodyObj.reason || '',
+        status: 'Pending',
+        applied_on: new Date().toISOString().split('T')[0]
+      };
       fallbackData.leaves.unshift(newLeave);
-      return { status: 'success', message: 'Leave application submitted', data: newLeave };
+      return { status: 'success', message: 'Leave application submitted successfully!', data: newLeave };
+    }
+    if (method === 'PUT') {
+      const bodyObj = options.body ? JSON.parse(options.body) : {};
+      const item = fallbackData.leaves.find(l => String(l.id) === String(bodyObj.id));
+      if (item) item.status = bodyObj.status;
+      return { status: 'success', message: `Leave request status updated to ${bodyObj.status}` };
     }
     return { status: 'success', count: fallbackData.leaves.length, data: fallbackData.leaves };
   }
   if (endpoint.includes('/projects/index.php')) {
+    if (method === 'POST') {
+      const bodyObj = options.body ? JSON.parse(options.body) : {};
+      const newProj = {
+        id: Date.now(),
+        name: bodyObj.name,
+        client: bodyObj.client || 'Internal',
+        start_date: bodyObj.start_date || new Date().toISOString().split('T')[0],
+        end_date: bodyObj.end_date || '2026-12-31',
+        status: 'Active',
+        budget: bodyObj.budget || 50000,
+        progress: 0
+      };
+      fallbackData.projects.unshift(newProj);
+      return { status: 'success', message: `Project '${newProj.name}' created successfully!`, data: newProj };
+    }
     return { status: 'success', count: fallbackData.projects.length, data: fallbackData.projects };
   }
   if (endpoint.includes('/tasks/index.php')) {
+    if (method === 'POST') {
+      const bodyObj = options.body ? JSON.parse(options.body) : {};
+      const newTask = {
+        id: Date.now(),
+        title: bodyObj.title,
+        project_id: bodyObj.project_id,
+        assigned_to: bodyObj.assigned_to,
+        status: 'In Progress',
+        priority: bodyObj.priority || 'Medium',
+        due_date: bodyObj.due_date || new Date().toISOString().split('T')[0]
+      };
+      fallbackData.tasks.unshift(newTask);
+      return { status: 'success', message: `Task '${newTask.title}' created successfully!`, data: newTask };
+    }
+    if (method === 'PUT') {
+      const bodyObj = options.body ? JSON.parse(options.body) : {};
+      const item = fallbackData.tasks.find(t => String(t.id) === String(bodyObj.id));
+      if (item) item.status = bodyObj.status;
+      return { status: 'success', message: `Task status updated to ${bodyObj.status}` };
+    }
     return { status: 'success', count: fallbackData.tasks.length, data: fallbackData.tasks };
   }
   if (endpoint.includes('/payroll/index.php')) {
+    if (method === 'POST') {
+      const bodyObj = options.body ? JSON.parse(options.body) : {};
+      if (bodyObj.action === 'mark_paid') {
+        const item = fallbackData.payroll.find(p => String(p.id) === String(bodyObj.id));
+        if (item) {
+          item.status = 'Paid';
+          item.payment_date = new Date().toISOString().split('T')[0];
+        }
+        return { status: 'success', message: 'Payroll marked as Paid!' };
+      }
+      return { status: 'success', message: 'Monthly payroll generated for all employees!' };
+    }
     return { status: 'success', count: fallbackData.payroll.length, data: fallbackData.payroll };
   }
   if (endpoint.includes('/productivity/index.php')) {
@@ -181,7 +308,7 @@ function handleFallback(endpoint, options = {}) {
     return { status: 'success', count: fallbackData.timesheets.length, data: fallbackData.timesheets };
   }
 
-  return { status: 'success', message: 'Offline action simulated successfully' };
+  return { status: 'success', message: 'Action completed successfully' };
 }
 
 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
