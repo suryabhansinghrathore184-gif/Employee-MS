@@ -42,7 +42,7 @@ export default function DepartmentModal({ isOpen, onClose, onSubmit }) {
       <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 animate-in fade-in zoom-in duration-200">
         <div className="flex justify-between items-center pb-4 mb-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
@@ -59,8 +59,8 @@ export default function DepartmentModal({ isOpen, onClose, onSubmit }) {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+          <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-100 text-rose-600 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
@@ -76,8 +76,8 @@ export default function DepartmentModal({ isOpen, onClose, onSubmit }) {
               required
               value={formData.name}
               onChange={handleChange}
-              placeholder="e.g. Information Technology"
-              className="w-full px-3.5 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 focus:outline-none"
+              placeholder="e.g. Engineering, Sales, HR"
+              className="w-full px-3.5 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
             />
           </div>
 
@@ -91,8 +91,8 @@ export default function DepartmentModal({ isOpen, onClose, onSubmit }) {
               required
               value={formData.code}
               onChange={handleChange}
-              placeholder="e.g. IT"
-              className="w-full px-3.5 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 focus:outline-none uppercase"
+              placeholder="e.g. ENG, MKT, HR"
+              className="w-full px-3.5 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none font-mono"
             />
           </div>
 
@@ -106,7 +106,7 @@ export default function DepartmentModal({ isOpen, onClose, onSubmit }) {
               value={formData.description}
               onChange={handleChange}
               placeholder="Brief description of department scope..."
-              className="w-full px-3.5 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 focus:outline-none"
+              className="w-full px-3.5 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
             />
           </div>
 
@@ -121,7 +121,7 @@ export default function DepartmentModal({ isOpen, onClose, onSubmit }) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2 text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 rounded-xl transition-colors shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              className="px-5 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? 'Creating...' : 'Save Department'}
             </button>

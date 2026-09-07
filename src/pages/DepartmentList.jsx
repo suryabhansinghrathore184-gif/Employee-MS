@@ -36,7 +36,7 @@ export default function DepartmentList({ onAddDepartment }) {
         </div>
         <button
           onClick={onAddDepartment}
-          className="px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
         >
           <Plus className="w-4 h-4" /> Add Department
         </button>
