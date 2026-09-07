@@ -115,7 +115,30 @@ const fallbackData = {
 function handleFallback(endpoint, options = {}) {
   const method = (options.method || 'GET').toUpperCase();
 
-  if (endpoint.includes('/auth/login.php') || endpoint.includes('/auth/register.php')) {
+  if (endpoint.includes('/auth/register.php')) {
+    const bodyObj = options.body ? JSON.parse(options.body) : {};
+    const nameParts = (bodyObj.full_name || bodyObj.username || 'New User').trim().split(' ');
+    const newEmp = {
+      id: Date.now(),
+      employee_code: `EMP${100 + fallbackData.employees.length + 1}`,
+      first_name: nameParts[0] || 'New',
+      last_name: nameParts.slice(1).join(' ') || 'Member',
+      email: bodyObj.email || `${bodyObj.username || 'user'}@company.com`,
+      phone: '9876543299',
+      department_id: 1,
+      department_name: 'Engineering',
+      designation: 'Software Developer',
+      salary: 65000,
+      date_of_joining: new Date().toISOString().split('T')[0],
+      work_type: 'Full-time',
+      status: 'Active'
+    };
+    fallbackData.employees.unshift(newEmp);
+    fallbackData.stats.total_employees = fallbackData.employees.length;
+    fallbackData.stats.recent_employees.unshift(newEmp);
+    return { status: 'success', message: 'Account registered successfully!', user: newEmp, token: 'demo_token_123' };
+  }
+  if (endpoint.includes('/auth/login.php')) {
     const bodyObj = options.body ? JSON.parse(options.body) : {};
     const matchedUser = fallbackData.getLoginUser(bodyObj.username || 'admin');
     return { status: 'success', user: matchedUser, token: 'demo_token_123', message: 'Login successful' };
@@ -145,6 +168,7 @@ function handleFallback(endpoint, options = {}) {
     }
     if (method === 'DELETE') {
       fallbackData.employees = fallbackData.employees.filter(e => String(e.id) !== String(empId));
+      fallbackData.stats.total_employees = fallbackData.employees.length;
       return { status: 'success', message: 'Employee deleted successfully!' };
     }
     const emp = fallbackData.employees.find(e => String(e.id) === String(empId)) || fallbackData.employees[0];
@@ -153,8 +177,24 @@ function handleFallback(endpoint, options = {}) {
   if (endpoint.includes('/employees/index.php')) {
     if (method === 'POST') {
       const bodyObj = options.body ? JSON.parse(options.body) : {};
-      const newEmp = { id: Date.now(), employee_code: `EMP${100 + fallbackData.employees.length + 1}`, status: 'Active', ...bodyObj };
+      const newEmp = {
+        id: Date.now(),
+        employee_code: `EMP${100 + fallbackData.employees.length + 1}`,
+        first_name: bodyObj.first_name || 'New',
+        last_name: bodyObj.last_name || 'Employee',
+        email: bodyObj.email || 'employee@company.com',
+        phone: bodyObj.phone || '9876543210',
+        department_id: bodyObj.department_id || 1,
+        department_name: bodyObj.department_name || 'Engineering',
+        designation: bodyObj.designation || 'Software Engineer',
+        salary: bodyObj.salary || 65000,
+        date_of_joining: bodyObj.date_of_joining || new Date().toISOString().split('T')[0],
+        work_type: bodyObj.work_type || 'Full-time',
+        status: 'Active'
+      };
       fallbackData.employees.unshift(newEmp);
+      fallbackData.stats.total_employees = fallbackData.employees.length;
+      fallbackData.stats.recent_employees.unshift(newEmp);
       return { status: 'success', message: `Employee '${newEmp.first_name} ${newEmp.last_name || ''}' added successfully!`, data: newEmp };
     }
     return { status: 'success', count: fallbackData.employees.length, data: fallbackData.employees };
