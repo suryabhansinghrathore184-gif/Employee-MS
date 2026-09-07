@@ -140,7 +140,7 @@ export default function Reports({ departments = [] }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-sm">
-                {reportData.map((row, idx) => (
+                {(Array.isArray(reportData) ? reportData : []).map((row, idx) => (
                   <tr key={idx} className="hover:bg-gray-50/80 transition-colors">
                     {reportType === 'attendance' && (
                       <>

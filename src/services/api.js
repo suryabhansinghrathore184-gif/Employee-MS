@@ -90,12 +90,21 @@ const fallbackData = {
     { employee_id: 2, first_name: 'Priya', last_name: 'Singh', total_hours: 160, active_hours: 148, productivity_score: 92, tasks_completed: 14 },
   ],
   reports: {
-    summary: { total_employees: 5, active_employees: 5, total_payroll: 420000, avg_attendance_rate: 96.5 },
-    breakdown: [
-      { category: 'Engineering', count: 2, salary_expense: 185000 },
-      { category: 'Human Resources', count: 1, salary_expense: 68000 },
-      { category: 'Marketing', count: 1, salary_expense: 72000 },
-      { category: 'Finance', count: 1, salary_expense: 95000 },
+    attendance: [
+      { date: '2026-09-07', employee_name: 'Rahul Sharma', employee_code: 'EMP101', department_name: 'Engineering', check_in: '09:00:00', check_out: '18:00:00', working_hours: 9.0, status: 'Present' },
+      { date: '2026-09-07', employee_name: 'Priya Singh', employee_code: 'EMP102', department_name: 'Human Resources', check_in: '09:15:00', check_out: '17:45:00', working_hours: 8.5, status: 'Present' },
+    ],
+    leave: [
+      { employee_name: 'Rahul Sharma', department_name: 'Engineering', leave_type: 'Casual', start_date: '2026-09-10', end_date: '2026-09-12', total_days: 3, status: 'Pending' },
+      { employee_name: 'Priya Singh', department_name: 'Human Resources', leave_type: 'Sick', start_date: '2026-09-01', end_date: '2026-09-02', total_days: 2, status: 'Approved' },
+    ],
+    projects: [
+      { project_name: 'EMS Mobile & Web SaaS', task_title: 'Setup Vercel SPA Routing', assignee_name: 'Rahul Sharma', priority: 'High', due_date: '2026-09-10', task_status: 'In Progress' },
+      { project_name: 'Cloud Migration AWS', task_title: 'Database Migration', assignee_name: 'Vikram Mehta', priority: 'Medium', due_date: '2026-09-05', task_status: 'Completed' },
+    ],
+    productivity: [
+      { date: '2026-09-07', employee_name: 'Rahul Sharma', department_name: 'Engineering', active_hours: 7.8, idle_hours: 0.5, score: 95 },
+      { date: '2026-09-07', employee_name: 'Priya Singh', department_name: 'Human Resources', active_hours: 7.2, idle_hours: 0.8, score: 92 },
     ]
   },
   timesheets: [
@@ -163,7 +172,10 @@ function handleFallback(endpoint, options = {}) {
     return { status: 'success', count: fallbackData.productivity.length, data: fallbackData.productivity };
   }
   if (endpoint.includes('/reports/index.php')) {
-    return { status: 'success', data: fallbackData.reports };
+    const urlParams = new URLSearchParams(endpoint.split('?')[1] || '');
+    const type = urlParams.get('type') || 'attendance';
+    const reportList = fallbackData.reports[type] || fallbackData.reports.attendance;
+    return { status: 'success', data: reportList };
   }
   if (endpoint.includes('/timesheets/index.php')) {
     return { status: 'success', count: fallbackData.timesheets.length, data: fallbackData.timesheets };
