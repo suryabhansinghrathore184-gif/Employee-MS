@@ -172,7 +172,14 @@ function handleFallback(endpoint, options = {}) {
   return { status: 'success', message: 'Offline action simulated successfully' };
 }
 
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
 async function request(endpoint, options = {}) {
+  // Direct fallback on cloud deployment (Vercel) to prevent 403 / 405 browser network errors
+  if (!isLocalhost) {
+    return handleFallback(endpoint, options);
+  }
+
   const defaultHeaders = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
