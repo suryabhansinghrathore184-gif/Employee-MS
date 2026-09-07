@@ -40,8 +40,12 @@ export default function LeaveManager({ user, showToast }) {
     }
 
     try {
+      const nameParts = (user?.full_name || user?.username || 'Usha').trim().split(' ');
       await api.applyLeave({
-        employee_id: user?.employee_id || 1,
+        employee_id: user?.employee_id || user?.id || Date.now(),
+        first_name: nameParts[0] || 'Usha',
+        last_name: nameParts.slice(1).join(' ') || '',
+        user_name: user?.full_name || user?.username || 'Usha',
         ...formData,
       });
       showToast('Leave request submitted successfully!');
@@ -68,7 +72,18 @@ export default function LeaveManager({ user, showToast }) {
     }
   };
 
-  const canApprove = ['admin', 'hr', 'manager'].includes(user?.role);
+  const displayedLeaves = leaves.filter(l => {
+    if (user?.role === 'employee') {
+      const myId = String(user?.employee_id || user?.id || '');
+      const myName = (user?.full_name || user?.username || '').toLowerCase();
+      const first = (l.first_name || '').toLowerCase();
+      const full = `${l.first_name || ''} ${l.last_name || ''}`.toLowerCase();
+      if (myId && String(l.employee_id) === myId) return true;
+      if (myName && (full.includes(myName) || myName.includes(first))) return true;
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -113,7 +128,7 @@ export default function LeaveManager({ user, showToast }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-sm">
-                {leaves.map((l) => (
+                {displayedLeaves.map((l) => (
                   <tr key={l.id} className="hover:bg-gray-50/80 transition-colors">
                     <td className="py-4 px-6 font-semibold text-gray-900">
                       {l.first_name} {l.last_name}

@@ -260,16 +260,32 @@ function handleFallback(endpoint, options = {}) {
   if (endpoint.includes('/leaves/index.php')) {
     if (method === 'POST') {
       const bodyObj = options.body ? JSON.parse(options.body) : {};
-      const targetEmp = fallbackData.employees.find(e => String(e.id) === String(bodyObj.employee_id)) || fallbackData.employees[0];
+      let fName = bodyObj.first_name;
+      let lName = bodyObj.last_name;
+
+      if (!fName && bodyObj.employee_id) {
+        const targetEmp = fallbackData.employees.find(e => String(e.id) === String(bodyObj.employee_id));
+        if (targetEmp) {
+          fName = targetEmp.first_name;
+          lName = targetEmp.last_name;
+        }
+      }
+
+      if (!fName) {
+        fName = bodyObj.user_name || 'Usha';
+        lName = '';
+      }
+
       const newLeave = {
         id: Date.now(),
-        employee_id: bodyObj.employee_id || 1,
-        first_name: targetEmp?.first_name || 'Rahul',
-        last_name: targetEmp?.last_name || 'Sharma',
+        employee_id: bodyObj.employee_id || Date.now(),
+        first_name: fName,
+        last_name: lName || '',
+        employee_code: `EMP${100 + (fallbackData.leaves.length + 1)}`,
         leave_type: bodyObj.leave_type || 'Casual',
-        start_date: bodyObj.start_date,
-        end_date: bodyObj.end_date,
-        days: bodyObj.days || 1,
+        start_date: bodyObj.start_date || new Date().toISOString().split('T')[0],
+        end_date: bodyObj.end_date || new Date().toISOString().split('T')[0],
+        total_days: bodyObj.days || 1,
         reason: bodyObj.reason || '',
         status: 'Pending',
         applied_on: new Date().toISOString().split('T')[0]
@@ -283,7 +299,14 @@ function handleFallback(endpoint, options = {}) {
       if (item) item.status = bodyObj.status;
       return { status: 'success', message: `Leave request status updated to ${bodyObj.status}` };
     }
-    return { status: 'success', count: fallbackData.leaves.length, data: fallbackData.leaves };
+
+    const urlParams = new URLSearchParams(endpoint.split('?')[1] || '');
+    const empId = urlParams.get('employee_id');
+    let list = fallbackData.leaves;
+    if (empId) {
+      list = list.filter(l => String(l.employee_id) === String(empId));
+    }
+    return { status: 'success', count: list.length, data: list };
   }
   if (endpoint.includes('/projects/index.php')) {
     if (method === 'POST') {
