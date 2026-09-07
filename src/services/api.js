@@ -103,6 +103,75 @@ const fallbackData = {
   ]
 };
 
+function handleFallback(endpoint, options = {}) {
+  const method = (options.method || 'GET').toUpperCase();
+
+  if (endpoint.includes('/auth/login.php') || endpoint.includes('/auth/register.php')) {
+    const bodyObj = options.body ? JSON.parse(options.body) : {};
+    const matchedUser = fallbackData.getLoginUser(bodyObj.username || 'admin');
+    return { status: 'success', user: matchedUser, token: 'demo_token_123' };
+  }
+  if (endpoint.includes('/stats/index.php')) {
+    return { status: 'success', data: fallbackData.stats };
+  }
+  if (endpoint.includes('/departments/index.php')) {
+    if (method === 'POST') {
+      const bodyObj = options.body ? JSON.parse(options.body) : {};
+      const newDept = { id: Date.now(), ...bodyObj, total_employees: 0, active_employees: 0 };
+      fallbackData.departments.push(newDept);
+      return { status: 'success', message: 'Department created', data: newDept };
+    }
+    return { status: 'success', count: fallbackData.departments.length, data: fallbackData.departments };
+  }
+  if (endpoint.includes('/employees/detail.php')) {
+    const urlParams = new URLSearchParams(endpoint.split('?')[1] || '');
+    const empId = urlParams.get('id');
+    const emp = fallbackData.employees.find(e => String(e.id) === String(empId)) || fallbackData.employees[0];
+    return { status: 'success', data: emp };
+  }
+  if (endpoint.includes('/employees/index.php')) {
+    if (method === 'POST') {
+      const bodyObj = options.body ? JSON.parse(options.body) : {};
+      const newEmp = { id: Date.now(), employee_code: `EMP${100 + fallbackData.employees.length + 1}`, status: 'Active', ...bodyObj };
+      fallbackData.employees.unshift(newEmp);
+      return { status: 'success', message: 'Employee added successfully', data: newEmp };
+    }
+    return { status: 'success', count: fallbackData.employees.length, data: fallbackData.employees };
+  }
+  if (endpoint.includes('/attendance/index.php')) {
+    return { status: 'success', count: fallbackData.attendance.length, data: fallbackData.attendance };
+  }
+  if (endpoint.includes('/leaves/index.php')) {
+    if (method === 'POST') {
+      const bodyObj = options.body ? JSON.parse(options.body) : {};
+      const newLeave = { id: Date.now(), status: 'Pending', applied_on: new Date().toISOString().split('T')[0], ...bodyObj };
+      fallbackData.leaves.unshift(newLeave);
+      return { status: 'success', message: 'Leave application submitted', data: newLeave };
+    }
+    return { status: 'success', count: fallbackData.leaves.length, data: fallbackData.leaves };
+  }
+  if (endpoint.includes('/projects/index.php')) {
+    return { status: 'success', count: fallbackData.projects.length, data: fallbackData.projects };
+  }
+  if (endpoint.includes('/tasks/index.php')) {
+    return { status: 'success', count: fallbackData.tasks.length, data: fallbackData.tasks };
+  }
+  if (endpoint.includes('/payroll/index.php')) {
+    return { status: 'success', count: fallbackData.payroll.length, data: fallbackData.payroll };
+  }
+  if (endpoint.includes('/productivity/index.php')) {
+    return { status: 'success', count: fallbackData.productivity.length, data: fallbackData.productivity };
+  }
+  if (endpoint.includes('/reports/index.php')) {
+    return { status: 'success', data: fallbackData.reports };
+  }
+  if (endpoint.includes('/timesheets/index.php')) {
+    return { status: 'success', count: fallbackData.timesheets.length, data: fallbackData.timesheets };
+  }
+
+  return { status: 'success', message: 'Offline action simulated successfully' };
+}
+
 async function request(endpoint, options = {}) {
   const defaultHeaders = {
     'Content-Type': 'application/json',
@@ -119,74 +188,15 @@ async function request(endpoint, options = {}) {
 
   try {
     const response = await fetch(`${BASE_URL}${endpoint}`, config);
-    const text = await response.text();
-
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (parseErr) {
-      if (endpoint.includes('/auth/login.php')) {
-        const bodyObj = options.body ? JSON.parse(options.body) : {};
-        const matchedUser = fallbackData.getLoginUser(bodyObj.username || 'admin');
-        return { status: 'success', user: matchedUser, token: 'demo_token_123' };
-      }
-      throw new Error('Server returned invalid data format.');
-    }
-
     if (!response.ok) {
-      throw new Error(data.message || 'An error occurred while communicating with backend.');
+      throw new Error(`HTTP error status ${response.status}`);
     }
-
+    const text = await response.text();
+    const data = JSON.parse(text);
     return data;
   } catch (error) {
-    console.warn(`API network fallback [${endpoint}]:`, error);
-    
-    if (endpoint.includes('/auth/login.php') || endpoint.includes('/auth/register.php')) {
-      const bodyObj = options.body ? JSON.parse(options.body) : {};
-      const matchedUser = fallbackData.getLoginUser(bodyObj.username || 'admin');
-      return { status: 'success', user: matchedUser, token: 'demo_token_123' };
-    }
-    if (endpoint.includes('/stats/index.php')) {
-      return { status: 'success', data: fallbackData.stats };
-    }
-    if (endpoint.includes('/departments/index.php')) {
-      return { status: 'success', count: fallbackData.departments.length, data: fallbackData.departments };
-    }
-    if (endpoint.includes('/employees/detail.php')) {
-      const urlParams = new URLSearchParams(endpoint.split('?')[1] || '');
-      const empId = urlParams.get('id');
-      const emp = fallbackData.employees.find(e => String(e.id) === String(empId)) || fallbackData.employees[0];
-      return { status: 'success', data: emp };
-    }
-    if (endpoint.includes('/employees/index.php')) {
-      return { status: 'success', count: fallbackData.employees.length, data: fallbackData.employees };
-    }
-    if (endpoint.includes('/attendance/index.php')) {
-      return { status: 'success', count: fallbackData.attendance.length, data: fallbackData.attendance };
-    }
-    if (endpoint.includes('/leaves/index.php')) {
-      return { status: 'success', count: fallbackData.leaves.length, data: fallbackData.leaves };
-    }
-    if (endpoint.includes('/projects/index.php')) {
-      return { status: 'success', count: fallbackData.projects.length, data: fallbackData.projects };
-    }
-    if (endpoint.includes('/tasks/index.php')) {
-      return { status: 'success', count: fallbackData.tasks.length, data: fallbackData.tasks };
-    }
-    if (endpoint.includes('/payroll/index.php')) {
-      return { status: 'success', count: fallbackData.payroll.length, data: fallbackData.payroll };
-    }
-    if (endpoint.includes('/productivity/index.php')) {
-      return { status: 'success', count: fallbackData.productivity.length, data: fallbackData.productivity };
-    }
-    if (endpoint.includes('/reports/index.php')) {
-      return { status: 'success', data: fallbackData.reports };
-    }
-    if (endpoint.includes('/timesheets/index.php')) {
-      return { status: 'success', count: fallbackData.timesheets.length, data: fallbackData.timesheets };
-    }
-
-    return { status: 'success', message: 'Offline action simulated successfully' };
+    console.warn(`API network fallback [${endpoint}]:`, error.message || error);
+    return handleFallback(endpoint, options);
   }
 }
 
