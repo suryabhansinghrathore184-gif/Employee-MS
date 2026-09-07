@@ -21,15 +21,42 @@ const fallbackData = {
       return { id: 3, username: 'manager', full_name: 'Vikram Mehta', email: 'manager@company.com', role: 'manager', employee_id: 3 };
     }
     if (str.includes('rahul')) {
-      return { id: 4, username: 'employee', full_name: 'Rahul Sharma', email: 'rahul@company.com', role: 'employee', employee_id: 1 };
+      return { id: 1, username: 'employee', full_name: 'Rahul Sharma', email: 'rahul@company.com', role: 'employee', employee_id: 1 };
     }
+    if (str.includes('usha')) {
+      return { id: 4, username: 'usha', full_name: 'Usha Sharma', email: 'usha@company.com', role: 'employee', employee_id: 4 };
+    }
+
+    // Check if employee already exists in fallbackData.employees
+    let existingEmp = fallbackData.employees.find(e => e.email.toLowerCase().includes(str) || e.first_name.toLowerCase().includes(str));
+    if (!existingEmp) {
+      existingEmp = {
+        id: Date.now(),
+        employee_code: `EMP${100 + fallbackData.employees.length + 1}`,
+        first_name: capitalized,
+        last_name: 'User',
+        email: usernameOrEmail.includes('@') ? usernameOrEmail : `${str}@company.com`,
+        phone: '9876543299',
+        department_id: 1,
+        department_name: 'Engineering',
+        designation: str.includes('admin') ? 'System Admin' : 'Software Developer',
+        salary: 70000,
+        date_of_joining: new Date().toISOString().split('T')[0],
+        work_type: 'Full-time',
+        status: 'Active'
+      };
+      fallbackData.employees.unshift(existingEmp);
+      fallbackData.stats.total_employees = fallbackData.employees.length;
+      fallbackData.stats.recent_employees.unshift(existingEmp);
+    }
+
     return { 
-      id: Date.now(), 
+      id: existingEmp.id, 
       username: str, 
-      full_name: capitalized, 
-      email: usernameOrEmail.includes('@') ? usernameOrEmail : `${str}@company.com`, 
+      full_name: `${existingEmp.first_name} ${existingEmp.last_name}`.trim(), 
+      email: existingEmp.email, 
       role: str.includes('admin') ? 'admin' : 'employee', 
-      employee_id: 1 
+      employee_id: existingEmp.id 
     };
   },
   stats: {
@@ -63,6 +90,7 @@ const fallbackData = {
     { id: 1, employee_code: 'EMP101', first_name: 'Rahul', last_name: 'Sharma', email: 'rahul@company.com', phone: '9876543210', department_id: 1, department_name: 'Engineering', designation: 'Senior Developer', salary: 75000, date_of_joining: '2023-01-15', work_type: 'Full-time', status: 'Active' },
     { id: 2, employee_code: 'EMP102', first_name: 'Priya', last_name: 'Singh', email: 'hr@company.com', phone: '9876543211', department_id: 2, department_name: 'Human Resources', designation: 'HR Lead', salary: 68000, date_of_joining: '2022-05-10', work_type: 'Full-time', status: 'Active' },
     { id: 3, employee_code: 'EMP103', first_name: 'Vikram', last_name: 'Mehta', email: 'manager@company.com', phone: '9876543212', department_id: 1, department_name: 'Engineering', designation: 'Engineering Manager', salary: 110000, date_of_joining: '2021-08-01', work_type: 'Full-time', status: 'Active' },
+    { id: 4, employee_code: 'EMP104', first_name: 'Usha', last_name: 'Sharma', email: 'usha@company.com', phone: '9876543215', department_id: 1, department_name: 'Engineering', designation: 'Software Developer', salary: 68000, date_of_joining: '2026-09-07', work_type: 'Full-time', status: 'Active' },
   ],
   attendance: [
     { id: 1, employee_id: 1, first_name: 'Rahul', last_name: 'Sharma', employee_code: 'EMP101', department_name: 'Engineering', date: '2026-09-07', check_in: '09:00:00', check_out: '18:00:00', work_hours: 9.0, working_hours: 9.0, status: 'Present', notes: 'Punctual' },
