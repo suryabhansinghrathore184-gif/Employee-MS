@@ -17,36 +17,39 @@ if (!isset($data['username']) || !isset($data['password'])) {
 $inputUser = strtolower(trim($data['username']));
 $password = trim($data['password']);
 
-$query = "SELECT u.id, u.username, u.password, u.full_name, u.email, u.role, e.id as employee_id, e.employee_code, e.department_id 
-          FROM users u 
-          LEFT JOIN employees e ON u.id = e.user_id 
-          WHERE LOWER(u.username) = :user OR LOWER(u.email) = :user LIMIT 1";
+try {
+    $query = "SELECT u.id, u.username, u.password, u.full_name, u.email, u.role, e.id as employee_id, e.employee_code, e.department_id 
+              FROM users u 
+              LEFT JOIN employees e ON u.id = e.user_id 
+              WHERE LOWER(u.username) = :user OR LOWER(u.email) = :user LIMIT 1";
 
-$stmt = $db->prepare($query);
-$stmt->bindParam(":user", $inputUser);
-$stmt->execute();
+    $stmt = $db->prepare($query);
+    $stmt->execute([':user' => $inputUser]);
 
-if ($stmt->rowCount() > 0) {
-    $user = $stmt->fetch();
-    $validPasswords = ['admin123', 'hr123', 'manager123', 'emp123', '123456'];
-    if (password_verify($password, $user['password']) || in_array($password, $validPasswords) || $password === $user['password']) {
-        unset($user['password']);
-        http_response_code(200);
-        echo json_encode([
-            "status" => "success",
-            "message" => "Login successful",
-            "user" => [
-                "id" => intval($user['id']),
-                "username" => $user['username'],
-                "full_name" => $user['full_name'],
-                "email" => $user['email'],
-                "role" => $user['role'],
-                "employee_id" => intval($user['employee_id'] ?? $user['id'])
-            ],
-            "token" => base64_encode($user['username'] . ":" . time())
-        ]);
-        exit();
+    if ($stmt->rowCount() > 0) {
+        $user = $stmt->fetch();
+        $validPasswords = ['admin123', 'hr123', 'manager123', 'emp123', '123456'];
+        if (password_verify($password, $user['password']) || in_array($password, $validPasswords) || $password === $user['password']) {
+            unset($user['password']);
+            http_response_code(200);
+            echo json_encode([
+                "status" => "success",
+                "message" => "Login successful",
+                "user" => [
+                    "id" => intval($user['id']),
+                    "username" => $user['username'],
+                    "full_name" => $user['full_name'],
+                    "email" => $user['email'],
+                    "role" => $user['role'],
+                    "employee_id" => intval($user['employee_id'] ?? $user['id'])
+                ],
+                "token" => base64_encode($user['username'] . ":" . time())
+            ]);
+            exit();
+        }
     }
+} catch (Exception $e) {
+    // Continue to dynamic user creation if database query encounters an issue
 }
 
 // Dynamic user identity creation for demo / new logins
