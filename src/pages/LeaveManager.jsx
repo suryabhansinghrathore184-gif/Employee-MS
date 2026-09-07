@@ -72,6 +72,8 @@ export default function LeaveManager({ user, showToast }) {
     }
   };
 
+  const canApprove = ['admin', 'hr', 'manager'].includes(user?.role);
+
   const displayedLeaves = leaves.filter(l => {
     if (user?.role === 'employee') {
       const myId = String(user?.employee_id || user?.id || '');
