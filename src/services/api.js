@@ -65,9 +65,9 @@ const fallbackData = {
     { id: 3, employee_code: 'EMP103', first_name: 'Vikram', last_name: 'Mehta', email: 'manager@company.com', phone: '9876543212', department_id: 1, department_name: 'Engineering', designation: 'Engineering Manager', salary: 110000, date_of_joining: '2021-08-01', work_type: 'Full-time', status: 'Active' },
   ],
   attendance: [
-    { id: 1, employee_id: 1, first_name: 'Rahul', last_name: 'Sharma', date: '2026-09-07', check_in: '09:00:00', check_out: '18:00:00', work_hours: 9.0, status: 'Present', notes: 'Punctual' },
-    { id: 2, employee_id: 2, first_name: 'Priya', last_name: 'Singh', date: '2026-09-07', check_in: '09:15:00', check_out: '17:45:00', work_hours: 8.5, status: 'Present', notes: '' },
-    { id: 3, employee_id: 3, first_name: 'Vikram', last_name: 'Mehta', date: '2026-09-07', check_in: '08:50:00', check_out: '18:10:00', work_hours: 9.3, status: 'Present', notes: '' },
+    { id: 1, employee_id: 1, first_name: 'Rahul', last_name: 'Sharma', employee_code: 'EMP101', department_name: 'Engineering', date: '2026-09-07', check_in: '09:00:00', check_out: '18:00:00', work_hours: 9.0, working_hours: 9.0, status: 'Present', notes: 'Punctual' },
+    { id: 2, employee_id: 2, first_name: 'Priya', last_name: 'Singh', employee_code: 'EMP102', department_name: 'Human Resources', date: '2026-09-07', check_in: '09:15:00', check_out: '17:45:00', work_hours: 8.5, working_hours: 8.5, status: 'Present', notes: '' },
+    { id: 3, employee_id: 3, first_name: 'Vikram', last_name: 'Mehta', employee_code: 'EMP103', department_name: 'Engineering', date: '2026-09-07', check_in: '08:50:00', check_out: '18:10:00', work_hours: 9.3, working_hours: 9.3, status: 'Present', notes: '' },
   ],
   leaves: [
     { id: 1, employee_id: 1, first_name: 'Rahul', last_name: 'Sharma', leave_type: 'Casual', start_date: '2026-09-10', end_date: '2026-09-12', days: 3, reason: 'Family event', status: 'Pending', applied_on: '2026-09-05' },
@@ -209,7 +209,13 @@ function handleFallback(endpoint, options = {}) {
       fallbackData.attendance.unshift(markRecord);
       return { status: 'success', message: `Recorded '${empName}' as ${statusLabel}!`, data: markRecord };
     }
-    return { status: 'success', count: fallbackData.attendance.length, data: fallbackData.attendance };
+    const urlParams = new URLSearchParams(endpoint.split('?')[1] || '');
+    const empId = urlParams.get('employee_id');
+    let list = fallbackData.attendance;
+    if (empId) {
+      list = list.filter(r => String(r.employee_id) === String(empId));
+    }
+    return { status: 'success', count: list.length, data: list };
   }
   if (endpoint.includes('/leaves/index.php')) {
     if (method === 'POST') {

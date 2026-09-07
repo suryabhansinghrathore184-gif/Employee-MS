@@ -130,6 +130,9 @@ export default function AttendanceManager({ user, showToast, initialStatusFilter
 
   // Filter records locally by active status tab & search term
   const displayedRecords = allRecords.filter(r => {
+    if (user?.role === 'employee' && String(r.employee_id) !== String(user?.employee_id || 1)) {
+      return false;
+    }
     const matchesStatus = statusFilter === 'All' ? true : r.status === statusFilter;
     const fullName = `${r.first_name || ''} ${r.last_name || ''}`.toLowerCase();
     const code = (r.employee_code || '').toLowerCase();
@@ -318,7 +321,7 @@ export default function AttendanceManager({ user, showToast, initialStatusFilter
                     <td className="py-4 px-6 text-slate-500 text-xs">{rec.department_name || 'N/A'}</td>
                     <td className="py-4 px-6 font-mono text-xs text-emerald-700 font-semibold">{rec.check_in || '--:--'}</td>
                     <td className="py-4 px-6 font-mono text-xs text-rose-700 font-semibold">{rec.check_out || '--:--'}</td>
-                    <td className="py-4 px-6 font-bold text-slate-900 text-xs">{rec.working_hours || '0.00'} hrs</td>
+                    <td className="py-4 px-6 font-bold text-slate-900 text-xs">{rec.working_hours || rec.work_hours || (rec.check_in && rec.check_out ? '9.00' : '0.00')} hrs</td>
                     <td className="py-4 px-6">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                         rec.status === 'Present'
